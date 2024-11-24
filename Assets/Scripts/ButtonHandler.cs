@@ -10,29 +10,40 @@ public class ButtonHandler : MonoBehaviour
 
     private string currentInput = "";
 
-    public void OnButtonClick(string value)
+    private bool isResultDisplayed = false;
+
+
+    public void OnButtonClick(string buttonValue)
     {
-        // Prevent adding operators at the start
-        if (string.IsNullOrEmpty(currentInput) && (value == "+" || value == "-" || value == "×" || value == "÷"))
+        // If a result was displayed
+        if (isResultDisplayed)
         {
-            return;
+            // If the button is an operator, append it to the result for chaining
+            if (buttonValue == "+" || buttonValue == "-" || buttonValue == "×" || buttonValue == "÷")
+            {
+                currentInput = displayField.text + buttonValue;
+            }
+            else
+            {
+                // Otherwise, clear the display for new input
+                currentInput = buttonValue;
+            }
+
+            isResultDisplayed = false; // Reset the flag
+        }
+        else
+        {
+            // Prevent multiple dots
+            if (buttonValue == "." && currentInput.Contains(".")) return;
+
+            currentInput += buttonValue;
         }
 
-        // Prevent consecutive operators
-        if (!string.IsNullOrEmpty(currentInput) &&
-            (currentInput[currentInput.Length - 1] == '+' ||
-             currentInput[currentInput.Length - 1] == '-' ||
-             currentInput[currentInput.Length - 1] == '×' ||
-             currentInput[currentInput.Length - 1] == '÷') &&
-            (value == "+" || value == "-" || value == "×" || value == "÷"))
-        {
-            return;
-        }
-
-        // Update input and display
-        currentInput += value;
+        // Update the display
         displayField.text = currentInput;
     }
+
+
 
     public void OnClearButtonClick()
     {
@@ -44,7 +55,6 @@ public class ButtonHandler : MonoBehaviour
     {
         if (string.IsNullOrEmpty(currentInput)) return;
 
-        // Sanitize input before sending it to the calculator
         string sanitizedInput = SanitizeInput(currentInput);
 
         double result = CalculatorLogic.EvaluateExpression(sanitizedInput);
@@ -52,9 +62,13 @@ public class ButtonHandler : MonoBehaviour
         // Display the result or error
         displayField.text = double.IsNaN(result) || double.IsInfinity(result) ? "Error" : result.ToString();
 
-        // Reset current input
+        // Store the result in current input for chaining calculations
         currentInput = result.ToString();
+
+        // Set the result flag to true
+        isResultDisplayed = true;
     }
+
 
 
     public void OnBackspaceClick()
